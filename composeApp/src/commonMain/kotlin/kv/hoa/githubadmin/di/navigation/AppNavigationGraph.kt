@@ -1,4 +1,4 @@
-package kv.hoa.githubadmin.di
+package kv.hoa.githubadmin.di.navigation
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -7,7 +7,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import hoa.kv.githubadmin.designsystem.AppNavDestination
 import hoa.kv.githubadmin.landing.MainScreen
 import hoa.kv.githubadmin.userdetails.UserDetailsScreen
 
@@ -32,17 +31,22 @@ fun AppNavigationGraph(
             MainScreen(
                 snackbarHostState = snackbarHostState,
                 onUserItemClicked = { userLoginName ->
-                    navController.navigate("userdetails/$userLoginName")
+                    navController.navigate(AppNavDestination.UserDetails.route(userLoginName))
                 }
             )
         }
-        composable(AppNavDestination.UserDetails.route) { entry ->
-            val id = entry.arguments
-                ?.getString("id")
-                ?.let(::requireNotNull)
-                .orEmpty()
+        composable(
+            route = AppNavDestination.UserDetails.routeWithArgs,
+            arguments = AppNavDestination.UserDetails.arguments
+        ) { navBackStackEntry ->
+            val loginName = navBackStackEntry.arguments?.getString(
+                AppNavDestination.UserDetails.LOGIN_NAME_ARG
+            )
+            if (loginName.isNullOrEmpty()) {
+                throw Exception("Cannot navigate to UserDetails Screen cause ${AppNavDestination.UserDetails.LOGIN_NAME_ARG} is null or empty")
+            }
             UserDetailsScreen(
-                userLoginName = id,
+                userLoginName = loginName,
                 snackbarHostState = snackbarHostState
             ) {
                 navController.navigateUp()
